@@ -1,0 +1,38 @@
+import pandas as pd
+from konlpy.tag import Okt
+from tqdm import tqdm_notebook
+
+
+file_name = input('파일이름을 입력해주세요(ex: yt_우도환.xlsx) : ')
+
+park = pd.read_excel(file_name)
+#파일 
+okt = Okt()
+stem_list = list()
+target = ['Noun','Adjective','Verb']
+for i in tqdm_notebook(park['Comment']):
+    for stems in okt.pos(i,stem = True):
+        if stems[1] in target:
+            stem_list.append(stems)
+#형태소 분석
+            
+park_df = (pd.DataFrame(stem_list))
+park_df.columns = ['word','stem']
+park_df.index = park_df['word']
+park_df.drop('word',inplace=True,axis=1)
+
+
+count_park = pd.DataFrame(park_df.index.value_counts())
+count_park.columns = ['counts']
+
+
+count_park['word'] = count_park.index
+count_park.index = range(len(count_park))
+park_df['word'] = park_df.index
+park_df.index = range(len(park_df))
+
+tmp = pd.merge(count_park,park_df,on='word')
+tmp2 = tmp.drop_duplicates(['word'],keep='last')
+
+output = filename+'output.xlsx'
+tmp2.to_excel(output)
